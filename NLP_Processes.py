@@ -14,8 +14,10 @@ def process_content():
 
             print(tagged)
 
-            # chunking
-            chunk_gram = r'''Chunk: {<RB.?>*<NNP>+<NN>?}'''
+            # chunking and chinking
+            chunk_gram = r'''Chunk: {<.*>+}
+                                    }<VB.?|IN|DT|TO>+{'''
+            # }<put chinking content inside this>{ and {<chunking content inside this>}
             chunk_parser = nltk.RegexpParser(chunk_gram)
             chunked = chunk_parser.parse(tagged)
 

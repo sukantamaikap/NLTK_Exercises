@@ -22,7 +22,14 @@ def find_features(doc):
         feature[w] = w in words
     return feature
 
-print(find_features(mr.words('neg/cv000_29416.txt')))
+#print(find_features(mr.words('neg/cv000_29416.txt')))
 
 feature_set = [(find_features(rev), category) for (rev, category) in documents]
 print(feature_set)
+
+training_set = feature_set[:1900]
+testing_set = feature_set[1900:]
+
+classifier = nltk.NaiveBayesClassifier.train(training_set)
+print("accuracy percentage : ", nltk.classify.accuracy(classifier, testing_set) * 100)
+classifier.show_most_informative_features(15)

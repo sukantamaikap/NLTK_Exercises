@@ -1,7 +1,5 @@
 import nltk
 import random
-from nltk.corpus import movie_reviews as mr
-import pickle
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from nltk.classify import ClassifierI
@@ -10,6 +8,7 @@ from statistics import mode
 
 class VoteClassifier(ClassifierI):
     """ Classifier to choose from multiple models """
+
     def labels(self):
         pass
 
@@ -34,35 +33,44 @@ class VoteClassifier(ClassifierI):
         return conf
 
 
-documents = [(list(mr.words(file_id)), category)
-             for category in mr.categories()
-             for file_id in mr.fileids(category)]
+short_positive = open('dataSet/positive.txt', 'r').read()
+short_negative = open('dataSet/negative.txt', 'r').read()
 
-random.shuffle(documents)
+documents = []
+for r in short_positive.split('\n'):
+    documents.append((r, 'pos'))
+
+for r in short_negative.split('\n'):
+    documents.append((r, 'neg'))
+
+short_positive_words = nltk.word_tokenize(short_positive)
+short_negative_words = nltk.word_tokenize(short_negative)
 
 all_words = []
-for w in mr.words():
-    all_words.append(w)
+for w in short_positive_words:
+    all_words.append(w.lower())
+
+for w in short_negative_words:
+    all_words.append(w.lower())
 
 all_words = nltk.FreqDist(all_words)
-word_features = list(all_words.keys())[:3000]
+word_features = list(all_words.keys())[:5000]
 
 
 def find_features(doc):
-    words = set(doc)
+    words = nltk.word_tokenize(doc)
     feature = {}
     for w in word_features:
         feature[w] = w in words
     return feature
 
 
-# print(find_features(mr.words('neg/cv000_29416.txt')))
-
 feature_set = [(find_features(rev), category) for (rev, category) in documents]
+random.shuffle(feature_set)
 print(feature_set)
 
-training_set = feature_set[:1900]
-testing_set = feature_set[1900:]
+training_set = feature_set[:10000]
+testing_set = feature_set[10000:]
 
 classifier = nltk.NaiveBayesClassifier.train(training_set)
 
@@ -113,14 +121,22 @@ NuSVC_classifier = SklearnClassifier(BernoulliNB())
 NuSVC_classifier.train(training_set)
 print("NuSVC classifier accuracy percentage : ", nltk.classify.accuracy(NuSVC_classifier, testing_set) * 100)
 
-
-voted_classifier = VoteClassifier(MNB_classifier, classifier, BernoulliNB_classifier, SGDClassifier_classifier, SVC_classifier, LinearSVC_classifier, NuSVC_classifier)
+voted_classifier = VoteClassifier(MNB_classifier, classifier, BernoulliNB_classifier, SGDClassifier_classifier,
+                                  SVC_classifier, LinearSVC_classifier, NuSVC_classifier)
 print("voted classifier accuracy percentage : ", nltk.classify.accuracy(voted_classifier, testing_set) * 100)
-print("Classification : ", voted_classifier.classify(testing_set[0][0]), " Confidence : ", voted_classifier.confidence(testing_set[0][0]))
-print("Classification : ", voted_classifier.classify(testing_set[1][0]), " Confidence : ", voted_classifier.confidence(testing_set[1][0]))
-print("Classification : ", voted_classifier.classify(testing_set[2][0]), " Confidence : ", voted_classifier.confidence(testing_set[2][0]))
-print("Classification : ", voted_classifier.classify(testing_set[3][0]), " Confidence : ", voted_classifier.confidence(testing_set[3][0]))
-print("Classification : ", voted_classifier.classify(testing_set[4][0]), " Confidence : ", voted_classifier.confidence(testing_set[4][0]))
-print("Classification : ", voted_classifier.classify(testing_set[5][0]), " Confidence : ", voted_classifier.confidence(testing_set[5][0]))
-print("Classification : ", voted_classifier.classify(testing_set[6][0]), " Confidence : ", voted_classifier.confidence(testing_set[6][0]))
-print("Classification : ", voted_classifier.classify(testing_set[7][0]), " Confidence : ", voted_classifier.confidence(testing_set[7][0]))
+print("Classification : ", voted_classifier.classify(testing_set[0][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[0][0]))
+print("Classification : ", voted_classifier.classify(testing_set[1][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[1][0]))
+print("Classification : ", voted_classifier.classify(testing_set[2][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[2][0]))
+print("Classification : ", voted_classifier.classify(testing_set[3][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[3][0]))
+print("Classification : ", voted_classifier.classify(testing_set[4][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[4][0]))
+print("Classification : ", voted_classifier.classify(testing_set[5][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[5][0]))
+print("Classification : ", voted_classifier.classify(testing_set[6][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[6][0]))
+print("Classification : ", voted_classifier.classify(testing_set[7][0]), " Confidence : ",
+      voted_classifier.confidence(testing_set[7][0]))
